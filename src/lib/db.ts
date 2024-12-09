@@ -96,7 +96,7 @@ export async function insertBlogComment(
   const now = new Date().toISOString();
   await sql`INSERT INTO blog_comments (date, content, author_id, blog_id)
     VALUES (${now}, ${content}, ${authorId}, ${blogId});`;
-  return getBlogComments(blogId);
+  return (await getBlogComments(blogId))[0];
 }
 
 export async function getUserByEmail(email: string) {

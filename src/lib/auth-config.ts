@@ -39,7 +39,7 @@ export const authConfig: AuthOptions = {
           SELECT m.*, ua.password_hash
           FROM members m
           JOIN user_auth ua ON ua.member_id = m.id
-          WHERE m.school_email = ${credentials.email}
+          WHERE m.personal_email = ${credentials.email}
         `;
 
         if (!user) return null;

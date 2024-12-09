@@ -5,10 +5,31 @@ import { TextField, Button, Paper, Box, Alert } from "@mui/material";
 import { insertBlogComment } from "@/lib/db";
 import { useSession } from "next-auth/react";
 
-export default function CommentForm({ blogId }: { blogId: number }) {
+interface CommentData {
+  id: number;
+  content: string;
+  userId: string;
+  blogId: number;
+  createdAt: Date;
+  user: {
+    name: string;
+  };
+}
+
+interface CommentFormProps {
+  blogId: number;
+  onCommentAdded?: (comment: CommentData) => void;
+}
+
+export default function CommentForm({
+  blogId,
+  onCommentAdded,
+}: CommentFormProps) {
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
   const { data: session } = useSession();
+  // @ts-expect-error - id is added in the jwt callback
+  const userId = session?.user?.id;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -25,8 +46,21 @@ export default function CommentForm({ blogId }: { blogId: number }) {
     }
 
     try {
-      await insertBlogComment(blogId, session.user.id, content);
+      const newComment = await insertBlogComment(blogId, userId, content);
       setContent("");
+
+      if (onCommentAdded) {
+        onCommentAdded({
+          id: newComment.id,
+          content,
+          userId: userId,
+          blogId,
+          createdAt: new Date(),
+          user: {
+            name: session.user.name || "Unknown User",
+          },
+        });
+      }
     } catch (error) {
       setError("Failed to post comment. Please try again.");
       console.error("Error creating comment:", error);
