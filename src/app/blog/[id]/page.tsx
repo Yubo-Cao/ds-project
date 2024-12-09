@@ -2,9 +2,7 @@ import { getBlogById, getBlogComments } from "@/lib/db";
 import ReactMarkdown from "react-markdown";
 import { format } from "date-fns";
 import { Typography, Box, Paper } from "@mui/material";
-import dynamic from "next/dynamic";
-
-const CommentForm = dynamic(() => import("./CommentForm"), { ssr: false });
+import CommentForm from "./ComentForm";
 
 type Props = {
   params: { id: string };
@@ -40,8 +38,7 @@ export default async function BlogPostPage({ params }: Props) {
             comments.map((c) => (
               <Box key={c.id} className="mb-4">
                 <Typography variant="subtitle2" className="text-gray-700">
-                  {c.first_name} {c.last_name} on{" "}
-                  {format(new Date(c.date), "PPpp")}
+                  {c.author_id} on {format(new Date(c.date), "PPpp")}
                 </Typography>
                 <Typography>{c.content}</Typography>
               </Box>
