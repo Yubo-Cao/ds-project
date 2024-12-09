@@ -2,6 +2,8 @@ import { TeamWithMembers } from "@/lib/schema";
 import { getAllTeamsWithMembers } from "@/lib/db";
 import { Box, Chip, Grid, Paper, Typography } from "@mui/material";
 
+export const revalidate = 15;
+
 export default async function TeamsPage() {
   const teams = await getAllTeamsWithMembers();
 

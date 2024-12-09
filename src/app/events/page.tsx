@@ -9,6 +9,8 @@ import {
 } from "@mui/material";
 import { format } from "date-fns";
 
+export const revalidate = 15;
+
 export default async function EventsPage() {
   const events = await getAllEvents();
 

@@ -12,6 +12,8 @@ import {
 import { format } from "date-fns";
 import Grid from "@mui/material/Grid2";
 
+export const revalidate = 15;
+
 export default async function MembersPage() {
   const members = await getAllMembers();
 
