@@ -1,8 +1,8 @@
 import { getBlogById, getBlogComments } from "@/lib/db";
 import ReactMarkdown from "react-markdown";
 import { format } from "date-fns";
-import { Typography, Box, Paper } from "@mui/material";
-import CommentForm from "./ComentForm";
+import { Typography, Box, Paper, Container, Divider } from "@mui/material";
+import CommentForm from "./CommentForm";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -17,37 +17,44 @@ export default async function BlogPostPage({ params: p }: Props) {
   if (!blog) return <div>Blog post not found</div>;
 
   return (
-    <Box>
-      <Typography variant="h3" className="mb-4">
-        {blog.title}
-      </Typography>
-      <Typography variant="subtitle2" className="text-gray-600 mb-6">
-        Published on {format(new Date(blog.date), "PPpp")}
-      </Typography>
-      <article className="prose prose-lg max-w-none">
-        <ReactMarkdown>{blog.content}</ReactMarkdown>
-      </article>
-
-      <Box className="mt-10">
-        <Typography variant="h5" className="mb-4">
-          Comments
+    <Container maxWidth="lg">
+      <Box sx={{ py: 4 }}>
+        <Typography variant="h3" gutterBottom>
+          {blog.title}
         </Typography>
-        <Paper className="p-4 mb-4">
-          {comments.length === 0 ? (
-            <Typography>No comments yet.</Typography>
-          ) : (
-            comments.map((c) => (
-              <Box key={c.id} className="mb-4">
-                <Typography variant="subtitle2" className="text-gray-700">
-                  {c.author_id} on {format(new Date(c.date), "PPpp")}
-                </Typography>
-                <Typography>{c.content}</Typography>
-              </Box>
-            ))
-          )}
+        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+          Published on {format(new Date(blog.date), "PPpp")}
+        </Typography>
+        <Paper sx={{ p: 4, my: 4 }}>
+          <article className="prose prose-lg max-w-none">
+            <ReactMarkdown>{blog.content}</ReactMarkdown>
+          </article>
         </Paper>
-        <CommentForm blogId={blogId} />
+
+        <Box sx={{ mt: 6 }}>
+          <Typography variant="h5" gutterBottom>
+            Comments ({comments.length})
+          </Typography>
+          <Paper sx={{ p: 3, mb: 3 }}>
+            {comments.length === 0 ? (
+              <Typography color="text.secondary">No comments yet.</Typography>
+            ) : (
+              comments.map((c, index) => (
+                <Box key={c.id}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      {c.author_id} on {format(new Date(c.date), "PPpp")}
+                    </Typography>
+                    <Typography variant="body1">{c.content}</Typography>
+                  </Box>
+                  {index < comments.length - 1 && <Divider sx={{ my: 2 }} />}
+                </Box>
+              ))
+            )}
+          </Paper>
+          <CommentForm blogId={blogId} />
+        </Box>
       </Box>
-    </Box>
+    </Container>
   );
 }

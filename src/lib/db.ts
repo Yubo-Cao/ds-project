@@ -98,3 +98,36 @@ export async function insertBlogComment(
     VALUES (${now}, ${content}, ${authorId}, ${blogId});`;
   return getBlogComments(blogId);
 }
+
+export async function getUserByEmail(email: string) {
+  const { rows } = await sql`
+    SELECT m.*, ua.password_hash, ua.is_active 
+    FROM members m
+    JOIN user_auth ua ON m.id = ua.member_id
+    WHERE m.school_email = ${email} OR m.personal_email = ${email}
+    LIMIT 1;
+  `;
+  return rows[0];
+}
+
+export async function createSession(
+  userId: number,
+  token: string,
+  expiresAt: Date
+) {
+  const { rows } = await sql`
+    INSERT INTO sessions (user_id, token, expires_at, created_at)
+    VALUES (${userId}, ${token}, ${expiresAt.toISOString()}, NOW())
+    RETURNING *;
+  `;
+  return rows[0];
+}
+
+export async function getSessionByToken(token: string) {
+  const { rows } = await sql`
+    SELECT * FROM sessions 
+    WHERE token = ${token} AND expires_at > NOW()
+    LIMIT 1;
+  `;
+  return rows[0];
+}

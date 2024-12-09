@@ -103,3 +103,19 @@ export type EventEnrollment = {
   event_id: number;
   member_id: number;
 };
+
+export type UserAuth = {
+  id: number;
+  member_id: number;
+  password_hash: string;
+  last_login?: Date;
+  is_active: boolean;
+};
+
+export type Session = {
+  id: number;
+  user_id: number;
+  token: string;
+  expires_at: Date;
+  created_at: Date;
+};
