@@ -1,8 +1,8 @@
 import { getBlogById, getBlogComments } from "@/lib/db";
 import ReactMarkdown from "react-markdown";
 import { format } from "date-fns";
-import { Typography, Box, Paper, Container, Divider } from "@mui/material";
-import CommentForm from "./CommentForm";
+import { Typography, Box, Paper, Container } from "@mui/material";
+import CommentForm, { CommentData } from "./CommentForm";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -12,7 +12,16 @@ export default async function BlogPostPage({ params: p }: Props) {
   const params = await p;
   const blogId = parseInt(params.id, 10);
   const blog = await getBlogById(blogId);
-  const comments = await getBlogComments(blogId);
+  const comments = (await getBlogComments(blogId)).map((c) => ({
+    id: c.id,
+    content: c.content,
+    userId: c.author_id + "",
+    blogId: c.blog_id,
+    createdAt: c.date,
+    user: {
+      name: `${c.first_name} ${c.last_name}`,
+    },
+  })) as CommentData[];
 
   if (!blog) return <div>Blog post not found</div>;
 
@@ -31,28 +40,11 @@ export default async function BlogPostPage({ params: p }: Props) {
           </article>
         </Paper>
 
-        <Box sx={{ mt: 6 }}>
+        <Box sx={{ mt: 12 }}>
           <Typography variant="h5" gutterBottom>
-            Comments ({comments.length})
+            Comments
           </Typography>
-          <Paper sx={{ p: 3, mb: 3 }}>
-            {comments.length === 0 ? (
-              <Typography color="text.secondary">No comments yet.</Typography>
-            ) : (
-              comments.map((c, index) => (
-                <Box key={c.id}>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      {c.author_id} on {format(new Date(c.date), "PPpp")}
-                    </Typography>
-                    <Typography variant="body1">{c.content}</Typography>
-                  </Box>
-                  {index < comments.length - 1 && <Divider sx={{ my: 2 }} />}
-                </Box>
-              ))
-            )}
-          </Paper>
-          <CommentForm blogId={blogId} />
+          <CommentForm blogId={blogId} initialComments={comments} />
         </Box>
       </Box>
     </Container>

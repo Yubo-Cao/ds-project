@@ -31,6 +31,8 @@ export type BlogComment = {
   content: string;
   author_id: number;
   blog_id: number;
+  first_name: string;
+  last_name: string;
 };
 
 export type OfficerRole = {
