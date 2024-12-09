@@ -85,6 +85,7 @@ export type CompetitiveTeamEnrollment = {
   team_role: string;
   competitive_team_id: number;
   member_id: number;
+  division_id: number;
 };
 
 export type Event = {

@@ -1,14 +1,63 @@
 "use server";
 
-import { CompetitiveTeam, Member, Event, Blog, BlogComment } from "@/db/schema";
+import { Blog, BlogComment, CompetitiveTeam, Event } from "@/db/schema";
+import { MemberDetails } from "@/types/member-details";
 import { sql } from "@vercel/postgres";
 
 export async function getAllMembers() {
-  const { rows } =
-    await sql<Member>`SELECT * FROM members ORDER BY last_name, first_name;`;
+  const { rows } = await sql<MemberDetails>`
+    SELECT 
+      m.*,
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'name', d.name,
+            'date', de.date
+          )
+        ) FILTER (WHERE d.id IS NOT NULL), '[]'
+      ) as divisions,
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'name', orols.name,
+            'description', orols.description,
+            'date_promoted', o.date_promoted,
+            'date_demoted', o.date_demoted
+          )
+        ) FILTER (WHERE orols.id IS NOT NULL), '[]'
+      ) as officer_roles,
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'name', ct.name,
+            'team_role', cte.team_role,
+            'date', cte.date
+          )
+        ) FILTER (WHERE ct.id IS NOT NULL), '[]'
+      ) as teams,
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'name', e.name,
+            'date', e.date,
+            'location', e.location
+          )
+        ) FILTER (WHERE e.id IS NOT NULL), '[]'
+      ) as events
+    FROM members m
+    LEFT JOIN division_enrollments de ON m.id = de.member_id
+    LEFT JOIN divisions d ON de.division_id = d.id
+    LEFT JOIN officers o ON m.id = o.member_id
+    LEFT JOIN officer_roles orols ON o.officer_role_id = orols.id
+    LEFT JOIN competitive_team_enrollments cte ON m.id = cte.member_id
+    LEFT JOIN competitive_teams ct ON cte.competitive_team_id = ct.id
+    LEFT JOIN event_enrollments ee ON m.id = ee.member_id
+    LEFT JOIN events e ON ee.event_id = e.id
+    GROUP BY m.id
+    ORDER BY m.last_name, m.first_name;
+  `;
   return rows;
 }
-
 export async function getAllEvents() {
   const { rows } = await sql<Event>`SELECT * FROM events ORDER BY date;`;
   return rows;
