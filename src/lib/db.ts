@@ -3,6 +3,7 @@
 import { Blog, BlogComment, CompetitiveTeam, Event } from "@/db/schema";
 import { MemberDetails } from "@/types/member-details";
 import { sql } from "@vercel/postgres";
+import { TeamWithMembers } from "./schema";
 
 export async function getAllMembers() {
   const { rows } = await sql<MemberDetails>`
@@ -69,6 +70,30 @@ export async function getAllTeams() {
   return rows;
 }
 
+export async function getAllTeamsWithMembers() {
+  const { rows } = await sql<TeamWithMembers>`
+    SELECT 
+      ct.*,
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'id', m.id,
+            'first_name', m.first_name,
+            'last_name', m.last_name,
+            'team_role', cte.team_role,
+            'date', cte.date
+          )
+        ) FILTER (WHERE m.id IS NOT NULL), '[]'
+      ) as members
+    FROM competitive_teams ct
+    LEFT JOIN competitive_team_enrollments cte ON ct.id = cte.competitive_team_id
+    LEFT JOIN members m ON cte.member_id = m.id
+    GROUP BY ct.id
+    ORDER BY ct.name;
+  `;
+  return rows;
+}
+
 export async function getAllBlogs() {
   const { rows } = await sql<Blog>`SELECT * FROM blogs ORDER BY date DESC;`;
   return rows;
@@ -105,28 +130,6 @@ export async function getUserByEmail(email: string) {
     FROM members m
     JOIN user_auth ua ON m.id = ua.member_id
     WHERE m.school_email = ${email} OR m.personal_email = ${email}
-    LIMIT 1;
-  `;
-  return rows[0];
-}
-
-export async function createSession(
-  userId: number,
-  token: string,
-  expiresAt: Date
-) {
-  const { rows } = await sql`
-    INSERT INTO sessions (user_id, token, expires_at, created_at)
-    VALUES (${userId}, ${token}, ${expiresAt.toISOString()}, NOW())
-    RETURNING *;
-  `;
-  return rows[0];
-}
-
-export async function getSessionByToken(token: string) {
-  const { rows } = await sql`
-    SELECT * FROM sessions 
-    WHERE token = ${token} AND expires_at > NOW()
     LIMIT 1;
   `;
   return rows[0];
